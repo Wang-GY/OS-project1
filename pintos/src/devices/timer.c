@@ -97,8 +97,10 @@ timer_sleep (int64_t ticks)
   struct thread *t = thread_current ();
   t->alarm_ticks = ticks;
   //block this thread
+  enum intr_level old_level = intr_disable ();
+  // disable intrrupt before block
   thread_block();
-
+  intr_set_level (old_level);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
