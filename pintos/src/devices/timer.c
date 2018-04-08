@@ -93,8 +93,12 @@ timer_sleep (int64_t ticks)
   int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks)
-    thread_yield (); //Yields the CPU.   The current thread is not put to sleep and may be scheduled again immediately at the scheduler's whim.
+
+  struct thread *t = thread_current ();
+  t->alarm_ticks = ticks;
+  //block this thread
+  thread_block();
+
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
