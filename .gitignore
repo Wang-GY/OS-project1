@@ -1,0 +1,8 @@
+
+pintos/src/tests/\.Make\.tests\.swp
+
+pintos/src/utils/setitimer-helper\.o
+
+pintos/src/utils/squish-pty\.o
+
+pintos/src/utils/squish-unix\.o
