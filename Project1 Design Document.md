@@ -130,3 +130,44 @@ void update_alarm(struct thread *t){
 调用timer_sleep的时候直接把线程阻塞掉，然后给线程结构体加一个成员alarm_ticks来记录这个线程被sleep了多少时间， 然后利用操作系统自身的时钟中断（每个tick会执行一次）加入对线程状态的检测， 每次检测将ticks_blocked减1, 如果减到0就唤醒这个线程。
 ### 3. Synchronization
 ### 4. Rationale
+
+## Task 2
+schedule() is responsible for switching threads. It is internal to threads/thread.c and called only by
+the three public thread functions that need to switch threads: thread_block(), thread_exit(), and
+thread_yield(). Before any of these functions call schedule(), they disable interrupts (or ensure that
+they are already disabled) and then change the running thread’s state to something other than running.
+
+## 思路
+在ticks 打断的时候检查时间片，到时间就轮换  
+
+thread.c
+```c
+void
+thread_tick (void)
+...
+/* Enforce preemption. */
+if (++thread_ticks >= TIME_SLICE)
+  intr_yield_on_return ();
+...
+interrupt.c
+```c
+/* Returns true during processing of an external interrupt
+   and false at all other times. */
+bool
+intr_context (void)
+{
+  return in_external_intr;
+}
+
+/* During processing of an external interrupt, directs the
+   interrupt handler to yield to a new process just before
+   returning from the interrupt.  May not be called at any other
+   time. */
+void
+intr_yield_on_return (void)
+{
+  ASSERT (intr_context ());
+  yield_on_return = true;
+  //make some change
+}
+```

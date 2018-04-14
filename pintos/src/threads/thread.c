@@ -123,7 +123,6 @@ void
 thread_tick (void)
 {
   struct thread *t = thread_current ();
-
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -138,9 +137,11 @@ thread_tick (void)
   thread_foreach(update_alarm,NULL);
 
   /* Enforce preemption. */
-  if (++thread_ticks >= TIME_SLICE)
-    intr_yield_on_return ();
+  if (++thread_ticks >= TIME_SLICE){
 
+    intr_yield_on_return ();
+    // switch thread if there are some therad waite
+  }
 }
 /**/
 void update_alarm(struct thread *t){
