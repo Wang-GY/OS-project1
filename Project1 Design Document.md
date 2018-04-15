@@ -138,7 +138,8 @@ thread_yield(). Before any of these functions call schedule(), they disable inte
 they are already disabled) and then change the running thread’s state to something other than running.
 
 ## 思路
-在ticks 打断的时候检查时间片，到时间就轮换  
+在ticks 打断的时候检查时间片，到时间就轮换。
+注意不能轮换不可被打断的线程  
 
 thread.c
 ```c
@@ -171,3 +172,5 @@ intr_yield_on_return (void)
   //make some change
 }
 ```
+## 3 思路
+将ready_list改为最大堆的数据结构，堆顶是优先级最高的线程。保持接口。
