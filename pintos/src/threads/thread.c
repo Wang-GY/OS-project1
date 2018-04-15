@@ -123,6 +123,7 @@ void
 thread_tick (void)
 {
   struct thread *t = thread_current ();
+  enum intr_level old_level = intr_get_level ();
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -138,7 +139,14 @@ thread_tick (void)
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE){
-
+    //check interrupt. for example:never interrupt main 
+    if (old_level == INTR_ON){
+      schedule();
+      // printf("time up, go away! %s\n",t->name );
+    }
+    else{
+      //  printf("I cannot be interrupt, leave me alone! %s\n",t->name );
+    }
     intr_yield_on_return ();
     // switch thread if there are some therad waite
   }
@@ -146,7 +154,7 @@ thread_tick (void)
 /**/
 void update_alarm(struct thread *t){
       // if alarm_ticks not 0
-      if(t->alarm_ticks>0 ){
+      if(t->alarm_ticks>0 && t->status == THREAD_BLOCKED){
         t->alarm_ticks--;
         if (t->alarm_ticks==0){
           thread_unblock(t);//wake up this thread (go to ready queue)
