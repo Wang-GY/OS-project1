@@ -174,3 +174,9 @@ intr_yield_on_return (void)
 ```
 ## 3 思路
 将ready_list改为最大堆的数据结构，堆顶是优先级最高的线程。保持接口。
+
+```c
+bool thread_elem_less(struct * elem , struct * e, void * aux ){
+  //return false if elem has higher priority of e
+}
+```

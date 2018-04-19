@@ -71,6 +71,8 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 void update_alarm(struct thread *t);
+
+bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void *aux);
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -139,7 +141,7 @@ thread_tick (void)
 
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE){
-    //check interrupt. for example:never interrupt main 
+    //check interrupt. for example:never interrupt main
     if (old_level == INTR_ON){
       schedule();
       // printf("time up, go away! %s\n",t->name );
@@ -164,6 +166,28 @@ void update_alarm(struct thread *t){
         return;
       }
       // otherwise not alarm, do nothing.
+}
+
+bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void * aux){
+  //return false if thread_elem has higher priority of thread_e
+  struct thread *thread_elem = list_entry(elem,struct thread, elem);
+  struct thread *thread_e = list_entry(e, struct thread, elem);
+
+  if (thread_elem->priority > thread_e->priority){
+    return true;
+  }else if (thread_elem->priority < thread_e->priority){
+    return false;
+  }else{ // same priority
+    if (strcmp(thread_e->name,thread_elem->name)>=0){
+      return true; //thread_elem 字典排序靠前 相同但是新插入的靠前？
+    }
+    else{
+      return false;
+    }
+
+  }
+
+
 }
 
 /* Prints thread statistics. */
