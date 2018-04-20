@@ -173,12 +173,12 @@ bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void * aux){
   struct thread *thread_elem = list_entry(elem,struct thread, elem);
   struct thread *thread_e = list_entry(e, struct thread, elem);
 
-  if (thread_elem->priority > thread_e->priority){
+  if (&thread_elem->priority > &thread_e->priority){
     return true;
-  }else if (thread_elem->priority < thread_e->priority){
+  }else if (&thread_elem->priority < &thread_e->priority){
     return false;
   }else{ // same priority
-    if (strcmp(thread_e->name,thread_elem->name)>=0){
+    if (strcmp(&thread_e->name,&thread_elem->name)>=0){
       return true; //thread_elem 字典排序靠前 相同但是新插入的靠前？
     }
     else{
