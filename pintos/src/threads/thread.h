@@ -139,4 +139,9 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
+// my finctions:
+void update_alarm(struct thread *t);
+bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void *aux);
+bool thread_more_important(struct thread *thread1, struct thread *thread2);
+
 #endif /* threads/thread.h */

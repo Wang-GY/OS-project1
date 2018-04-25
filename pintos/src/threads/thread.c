@@ -70,9 +70,8 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
-void update_alarm(struct thread *t);
 
-bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void *aux);
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -173,20 +172,19 @@ bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void * aux){
   struct thread *thread_elem = list_entry(elem,struct thread, elem);
   struct thread *thread_e = list_entry(e, struct thread, elem);
 
-  if (thread_elem->priority > thread_e->priority){
-    return true;
-  }else if (thread_elem->priority < thread_e->priority){
-    return false;
-  }else{ // same priority
-    if (strcmp(thread_e->name,thread_elem->name)>=0){
-      return true; //thread_elem 字典排序靠前 相同但是新插入的靠前？
-    }
-    else{
-      return false;
-    }
+  return thread_more_important(thread_elem,thread_e);
 
+}
+/**
+return true if thread1 is more important than 2
+*/
+bool thread_more_important(struct thread *thread1, struct thread *thread2){
+  if (thread1->priority == thread2->priority){
+    return strcmp(thread1->name,thread2->name)<=0;
   }
-
+  else{
+    return thread1->priority > thread2->priority;
+  }
 
 }
 
@@ -251,6 +249,11 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
+
+  //check if new-process has higher priority
+  if (thread_more_important(t,thread_current())){
+    thread_yield();
+  }
 
   return tid;
 }
@@ -388,7 +391,8 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority)
 {
-  thread_current ()->priority = new_priority;
+  thread_current()->priority = new_priority;
+  thread_yield();
 }
 
 /* Returns the current thread's priority. */
