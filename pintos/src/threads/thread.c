@@ -173,12 +173,12 @@ bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void * aux){
   struct thread *thread_elem = list_entry(elem,struct thread, elem);
   struct thread *thread_e = list_entry(e, struct thread, elem);
 
-  if (&thread_elem->priority > &thread_e->priority){
+  if (thread_elem->priority > thread_e->priority){
     return true;
-  }else if (&thread_elem->priority < &thread_e->priority){
+  }else if (thread_elem->priority < thread_e->priority){
     return false;
   }else{ // same priority
-    if (strcmp(&thread_e->name,&thread_elem->name)>=0){
+    if (strcmp(thread_e->name,thread_elem->name)>=0){
       return true; //thread_elem 字典排序靠前 相同但是新插入的靠前？
     }
     else{
@@ -289,7 +289,7 @@ thread_unblock (struct thread *t)
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
   //list_push_back (&ready_list, &t->elem);
-  list_insert_ordered(&ready_list, &t->elem,(list_less_func *) &thread_elem_less,NULL);
+  list_insert_ordered(&ready_list, &(t->elem),(list_less_func *) &thread_elem_less,NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -361,7 +361,7 @@ thread_yield (void)
   old_level = intr_disable ();
   if (cur != idle_thread)
     //list_push_back (&ready_list, &cur->elem);
-    list_insert_ordered(&ready_list, &cur->elem,(list_less_func *) &thread_elem_less,NULL);
+    list_insert_ordered(&ready_list, &(cur->elem),(list_less_func *) &thread_elem_less,NULL);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -518,8 +518,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();
-  list_push_back (&all_list, &t->allelem);
-  //list_insert_ordered(&all_list, &t->allelem,(list_less_func *) &thread_elem_less,NULL);
+  //list_push_back (&all_list, &t->allelem);
+  list_insert_ordered(&all_list, &(t->allelem),(list_less_func *) &thread_elem_less,NULL);
   intr_set_level (old_level);
 }
 
