@@ -87,12 +87,16 @@ struct thread
     enum thread_status status;          /* Thread state. */
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
-    int priority;                       /* Priority. */
+    int priority;                       /* Priority. current priority = Max(original_priority, MAX_LOCK_Piority) */
     int64_t alarm_ticks;                  /*Left ticks number that the thread should been resume*/
     struct list_elem allelem;           /* List element for all threads list. */
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
+
+    int original_priority;              //priority without donation.
+    struct list *locks;                  /* Locks that the thread hold */
+    struct lock *lock;           /* lock that the thread is waiting for */
 
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
@@ -143,5 +147,9 @@ int thread_get_load_avg (void);
 void update_alarm(struct thread *t);
 bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void *aux);
 bool thread_more_important(struct thread *thread1, struct thread *thread2);
+
+// change lock's MAX_LOCK_Piority if thread->current > lock->MAX_LOCK_Piority
+void notify_lock(struct thread *thread);
+
 
 #endif /* threads/thread.h */

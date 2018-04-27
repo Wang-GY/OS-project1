@@ -338,3 +338,20 @@ cond_broadcast (struct condition *cond, struct lock *lock)
   while (!list_empty (&cond->waiters))
     cond_signal (cond, lock);
 }
+
+/*
+notify lock's holder if someone denoate it's priority to this thread
+*/
+void notify_holder(struct lock *lock){
+  // do nothing if this lock doesn't have holder.
+  if (lock->holder == NULL){
+    return;
+  }
+  else{
+  struct thread *holder = lock ->holder;
+    
+    // notify lock that the thread is waiting for.
+    notify_lock(holder);
+  }
+
+}

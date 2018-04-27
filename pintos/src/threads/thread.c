@@ -141,13 +141,6 @@ thread_tick (void)
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE){
     //check interrupt. for example:never interrupt main
-    if (old_level == INTR_ON){
-      schedule();
-      // printf("time up, go away! %s\n",t->name );
-    }
-    else{
-      //  printf("I cannot be interrupt, leave me alone! %s\n",t->name );
-    }
     intr_yield_on_return ();
     // switch thread if there are some therad waite
   }
@@ -519,6 +512,7 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
+  t->original_priority = priority;
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();
@@ -636,7 +630,31 @@ allocate_tid (void)
 
   return tid;
 }
-
+
+/*
+
+ Notify lock to update it's MAX_LOCK_Piority
+ change lock's MAX_LOCK_Piority if thread->current > lock->MAX_LOCK_Piority
+ It will be called when the thread_riority are changed.
+ It will be happen when a thread require the lock, or notify_holder when the priority
+ are changed. Also
+*/
+void notify_lock(struct thread *thread){
+    struct lock *lock = thread->lock;
+    if (lock == NULL){
+      return;
+    }
+
+    ASSERT(thread->lock == lock); // assert lock are reacquired by thread
+    int max_priority = lock->MAX_LOCK_Piority;
+    if (max_priority < thread->priority){
+      lock -> MAX_LOCK_Piority = thread ->priority;
+      notify_holder(lock);
+    }
+}
+
+
+
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
