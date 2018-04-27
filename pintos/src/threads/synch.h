@@ -52,4 +52,8 @@ void cond_broadcast (struct condition *, struct lock *);
 
 // my functions
 void notify_holder(struct lock *lock);
+
+bool
+cond_sema_cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux);
+
 #endif /* threads/synch.h */

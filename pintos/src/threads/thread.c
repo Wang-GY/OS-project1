@@ -657,6 +657,9 @@ allocate_tid (void)
 void notify_lock(struct thread *thread){
     struct lock *lock = thread->lock;
     if (lock == NULL){
+      // get the original thread that cause the lock, the priority should
+      //have been donated,just schedule it.
+      thread_yield();
       return;
     }
 
