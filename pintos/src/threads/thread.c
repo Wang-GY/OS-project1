@@ -124,6 +124,13 @@ void
 thread_tick (void)
 {
   struct thread *t = thread_current ();
+  /*
+  // don't change the following 3 lines  *********   !!!
+      int len = strlen (t-> name);
+      if (t->name[len - 1] >= '0' && t->name[len - 1] <= '9')
+          printf ("(%c%c,%d) ", t->name[len - 2], t->name[len - 1], t->priority);
+  //things to help us testing your program  ***   !!!
+  */
   enum intr_level old_level = intr_get_level ();
   /* Update statistics. */
   if (t == idle_thread)
@@ -172,12 +179,9 @@ bool thread_elem_less(struct list_elem *elem , struct list_elem *e, void * aux){
 return true if thread1 is more important than 2
 */
 bool thread_more_important(struct thread *thread1, struct thread *thread2){
-  if (thread1->priority == thread2->priority){
-    return strcmp(thread1->name,thread2->name)<=0;
-  }
-  else{
+    //不再要求字典排序
     return thread1->priority > thread2->priority;
-  }
+
 
 }
 
@@ -384,7 +388,7 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority)
 {
-
+  enum intr_level old_level = intr_disable ();
   struct thread *cur = thread_current();
   if (list_empty(&cur->locks)){ // doesn't hold any lock
     cur->original_priority = new_priority;
@@ -395,11 +399,12 @@ thread_set_priority (int new_priority)
   // preserve that priority always max:
   if (cur->priority < cur->original_priority){
     cur->priority = cur->original_priority;
+    notify_lock(cur);
     thread_yield();
   }
   // new priority is less than donated priority, just record.
 }
-
+  intr_set_level (old_level);
 }
 /* Returns the current thread's priority. */
 int
@@ -655,11 +660,12 @@ allocate_tid (void)
  are changed. Also
 */
 void notify_lock(struct thread *thread){
+    ASSERT (intr_get_level () == INTR_OFF);
     struct lock *lock = thread->lock;
     if (lock == NULL){
       // get the original thread that cause the lock, the priority should
       //have been donated,just schedule it.
-      thread_yield();
+      // thread_yield();
       return;
     }
 

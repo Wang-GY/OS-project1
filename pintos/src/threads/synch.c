@@ -120,6 +120,9 @@ sema_up (struct semaphore *sema)
                                 struct thread, elem));
     }
   sema->value++;
+  //otherwise msg output bug?
+  thread_yield ();
+
   intr_set_level (old_level);
 }
 
@@ -254,6 +257,9 @@ lock_release (struct lock *lock)
 
   struct thread *cur = thread_current();
 
+  enum intr_level old_level;
+  old_level = intr_disable ();
+
   ASSERT(lock->elem.prev !=NULL);
   ASSERT(lock->elem.next !=NULL);
   list_remove(&lock->elem);
@@ -261,7 +267,12 @@ lock_release (struct lock *lock)
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 
+  int old_pri = cur->priority;
+
   cur->priority = cur->original_priority;
+
+
+
   // set cur->priority to MAX(every_max_lock_priority, original_priority)
   struct list_elem *e;
   for(e = list_begin(&cur->locks);e!=list_end(&cur->locks);e = list_next(e)){
@@ -271,7 +282,10 @@ lock_release (struct lock *lock)
     }
   }
 
+  intr_set_level (old_level);
   thread_yield();
+
+
 
 }
 
@@ -392,6 +406,7 @@ cond_broadcast (struct condition *cond, struct lock *lock)
 notify lock's holder if someone denoate it's priority to this thread
 */
 void notify_holder(struct lock *lock){
+  ASSERT (intr_get_level () == INTR_OFF);
   // do nothing if this lock doesn't have holder.
   struct thread *cur = thread_current();
   if (lock->MAX_LOCK_Piority < cur->priority){
