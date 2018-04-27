@@ -95,7 +95,7 @@ struct thread
     struct list_elem elem;              /* List element. */
 
     int original_priority;              //priority without donation.
-    struct list *locks;                  /* Locks that the thread hold */
+    struct list locks;                  /* Locks that the thread hold */
     struct lock *lock;           /* lock that the thread is waiting for */
 
 #ifdef USERPROG
@@ -137,6 +137,8 @@ void thread_foreach (thread_action_func *, void *);
 
 int thread_get_priority (void);
 void thread_set_priority (int);
+
+void thread_update_priority(struct thread *thread,int new_priority);
 
 int thread_get_nice (void);
 void thread_set_nice (int);

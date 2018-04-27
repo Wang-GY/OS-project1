@@ -384,10 +384,23 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority)
 {
-  thread_current()->priority = new_priority;
-  thread_yield();
+
+  struct thread *cur = thread_current();
+  if (list_empty(&cur->locks)){ // doesn't hold any lock
+    cur->original_priority = new_priority;
+    cur->priority = new_priority;
+    thread_yield();
+  }else{// has lock, just record
+  cur->original_priority = new_priority;
+  // preserve that priority always max:
+  if (cur->priority < cur->original_priority){
+    cur->priority = cur->original_priority;
+    thread_yield();
+  }
+  // new priority is less than donated priority, just record.
 }
 
+}
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void)
@@ -513,6 +526,8 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->original_priority = priority;
+  list_init(&t->locks);
+  t->lock=NULL;
   t->magic = THREAD_MAGIC;
 
   old_level = intr_disable ();
@@ -653,6 +668,13 @@ void notify_lock(struct thread *thread){
     }
 }
 
+/**
+update thread priority, preserve the propertiy that the thread's priority lager than
+or equal to original_priority, MAX_LOCK_Piority of any locks it holdes
+*/
+void thread_update_priority(struct thread *thread,int new_priority){
+
+}
 
 
 /* Offset of `stack' member within `struct thread'.
