@@ -200,7 +200,12 @@ lock_acquire (struct lock *lock)
   ASSERT (!lock_held_by_current_thread (lock));
   struct thread *cur = thread_current ();
   cur->lock = lock;
+
+  enum intr_level old_level;
+  old_level = intr_disable ();
+  // dangerous operation can not be interrupt.
   notify_holder(lock);
+  intr_set_level (old_level);
 
   sema_down (&lock->semaphore);
   lock->holder = cur;
@@ -223,7 +228,11 @@ lock_try_acquire (struct lock *lock)
   struct thread *cur = thread_current ();
   cur->lock = lock;
 
+  enum intr_level old_level;
+  old_level = intr_disable ();
+  // dangerous operation can not be interrupt.
   notify_holder(lock);
+  intr_set_level (old_level);
   success = sema_try_down (&lock->semaphore);
   if (success){
     lock->holder = cur;
