@@ -384,18 +384,29 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
-/* Sets the current thread's priority to NEW_PRIORITY. */
+/* Sets the current thread's priority to NEW_PRIORITY.
+If NEW_PRIORITY > PRI_MAX or NEW_PRIORITY < PRI_MIN, priority
+will be set to PRI_MAX or PRI_MIN.
+*/
 void
 thread_set_priority (int new_priority)
 {
+  if (new_priority < PRI_MIN){
+    new_priority = PRI_MIN;
+  }
+  if (new_priority > PRI_MAX){
+    new_priority = PRI_MAX;
+  }
+
   enum intr_level old_level = intr_disable ();
   struct thread *cur = thread_current();
+
+  cur->original_priority = new_priority;
   if (list_empty(&cur->locks)){ // doesn't hold any lock
-    cur->original_priority = new_priority;
     cur->priority = new_priority;
     thread_yield();
   }else{// has lock, just record
-  cur->original_priority = new_priority;
+    
   // preserve that priority always max:
   if (cur->priority < cur->original_priority){
     cur->priority = cur->original_priority;
@@ -677,13 +688,7 @@ void notify_lock(struct thread *thread){
     }
 }
 
-/**
-update thread priority, preserve the propertiy that the thread's priority lager than
-or equal to original_priority, MAX_LOCK_Piority of any locks it holdes
-*/
-void thread_update_priority(struct thread *thread,int new_priority){
 
-}
 
 
 /* Offset of `stack' member within `struct thread'.
