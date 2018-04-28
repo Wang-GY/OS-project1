@@ -95,6 +95,10 @@ struct thread
     struct list_elem elem;              /* List element. */
 
     int original_priority;              //priority without donation.
+
+    int birth_priority;                 /*Priority when the thread is created*/
+    int time_slce;                  /*time_slce = birth_priority%7 + 2*/
+
     struct list locks;                  /* Locks that the thread hold */
     struct lock *lock;           /* lock that the thread is waiting for */
 

@@ -146,9 +146,18 @@ thread_tick (void)
   thread_foreach(update_alarm,NULL);
 
   /* Enforce preemption. */
-  if (++thread_ticks >= TIME_SLICE){
+  if (++thread_ticks >= t->time_slce){
     //check interrupt. for example:never interrupt main
+
     intr_yield_on_return ();
+
+    if (old_level == INTR_ON){
+    int new_priority = t->priority -3;
+    if (new_priority < PRI_MIN){
+      new_priority = PRI_MIN;
+    }
+    thread_set_priority(new_priority);
+    }
     // switch thread if there are some therad waite
   }
 }
@@ -406,7 +415,7 @@ thread_set_priority (int new_priority)
     cur->priority = new_priority;
     thread_yield();
   }else{// has lock, just record
-    
+
   // preserve that priority always max:
   if (cur->priority < cur->original_priority){
     cur->priority = cur->original_priority;
@@ -542,6 +551,10 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->original_priority = priority;
+
+  t->birth_priority = priority;
+  t->time_slce = priority%7 + 2;
+
   list_init(&t->locks);
   t->lock=NULL;
   t->magic = THREAD_MAGIC;
