@@ -223,6 +223,7 @@ intr_yield_on_return (void)
 {
   ASSERT (intr_context ());
   yield_on_return = true;
+
 }
 
 /* 8259A Programmable Interrupt Controller. */
@@ -383,8 +384,20 @@ intr_handler (struct intr_frame *frame)
       in_external_intr = false;
       pic_end_of_interrupt (frame->vec_no);
 
-      if (yield_on_return)
+      if (yield_on_return){
+        // time up, call thread yield
+        enum intr_level old_level = intr_get_level ();
+        struct thread *t = thread_current();
+        if (old_level == INTR_ON){
+        int new_priority = t->priority -3;
+        if (new_priority < PRI_MIN){
+          new_priority = PRI_MIN;
+        }
+        printf("%s\n", "reset priority!\n");
+        thread_set_priority(new_priority);
+        }
         thread_yield ();
+      }
     }
 }
 

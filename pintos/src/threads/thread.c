@@ -124,14 +124,13 @@ void
 thread_tick (void)
 {
   struct thread *t = thread_current ();
-  /*
+
   // don't change the following 3 lines  *********   !!!
       int len = strlen (t-> name);
       if (t->name[len - 1] >= '0' && t->name[len - 1] <= '9')
           printf ("(%c%c,%d) ", t->name[len - 2], t->name[len - 1], t->priority);
   //things to help us testing your program  ***   !!!
-  */
-  enum intr_level old_level = intr_get_level ();
+
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -151,13 +150,7 @@ thread_tick (void)
 
     intr_yield_on_return ();
 
-    if (old_level == INTR_ON){
-    int new_priority = t->priority -3;
-    if (new_priority < PRI_MIN){
-      new_priority = PRI_MIN;
-    }
-    thread_set_priority(new_priority);
-    }
+
     // switch thread if there are some therad waite
   }
 }
