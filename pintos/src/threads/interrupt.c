@@ -388,9 +388,10 @@ intr_handler (struct intr_frame *frame)
         // time up, call thread yield
         enum intr_level old_level = intr_get_level ();
         struct thread *t = thread_current();
-        //if (old_level == INTR_ON){
+        if (strcmp(t->name, "main")){ // do not reset main thread. !=0 REALLY BAD DESIGN
+        //printf("%s\n", "time up, reset priority");
         thread_set_priority(t->priority-3);
-        //}
+        }
         //thread_yield ();
       }
     }

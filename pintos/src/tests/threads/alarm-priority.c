@@ -17,9 +17,10 @@ test_alarm_priority (void)
 {
     /* This test does not work with the MLFQS. */
     ASSERT (!thread_mlfqs);
-    
+    //ASSERT (thread_get_priority () == PRI_DEFAULT);
+    printf("current priority is %d\n", thread_get_priority() );
     sema_init (&wait_sema, 0);
-    
+
     for (int i = 0; i < 10; i++)
     {
         int priority = PRI_DEFAULT - (i + 5) % 10 - 1;
@@ -27,11 +28,11 @@ test_alarm_priority (void)
         snprintf (name, sizeof name, "priority %d", priority);
         thread_create (name, priority, alarm_priority_thread, NULL);
     }
-    
+
     printf ("\nbegin\n");
     for (int i = 0; i < 10; i++)
         sema_up (&wait_sema);
-    
+
     timer_sleep(2000);
     printf ("\nend\n");
 }
@@ -42,7 +43,7 @@ alarm_priority_thread (void *aux UNUSED)
     /* Now we know we're at the very beginning of a timer tick, so
      we can call timer_sleep() without worrying about races
      between checking the time and a timer interrupt. */
-    
+
     sema_down (&wait_sema);
     /* Print a message on wake-up. */
     int64_t t = timer_ticks ();
