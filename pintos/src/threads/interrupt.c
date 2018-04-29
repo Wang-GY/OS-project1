@@ -388,15 +388,10 @@ intr_handler (struct intr_frame *frame)
         // time up, call thread yield
         enum intr_level old_level = intr_get_level ();
         struct thread *t = thread_current();
-        if (old_level == INTR_ON){
-        int new_priority = t->priority -3;
-        if (new_priority < PRI_MIN){
-          new_priority = PRI_MIN;
-        }
-        printf("%s\n", "reset priority!\n");
-        thread_set_priority(new_priority);
-        }
-        thread_yield ();
+        //if (old_level == INTR_ON){
+        thread_set_priority(t->priority-3);
+        //}
+        //thread_yield ();
       }
     }
 }
