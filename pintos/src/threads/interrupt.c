@@ -384,11 +384,12 @@ intr_handler (struct intr_frame *frame)
       in_external_intr = false;
       pic_end_of_interrupt (frame->vec_no);
 
+
       if (yield_on_return){
         // time up, call thread yield
         enum intr_level old_level = intr_get_level ();
         struct thread *t = thread_current();
-
+        
         if (strcmp(t->name, "main")){ // do not reset main thread. !=0 REALLY BAD DESIGN
         //printf("%s\n", "time up, reset priority");
         t->priority = t->priority -3;
@@ -400,6 +401,7 @@ intr_handler (struct intr_frame *frame)
         }
 
         thread_yield ();
+
       }
     }
 }

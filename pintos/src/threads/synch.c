@@ -270,17 +270,7 @@ lock_release (struct lock *lock)
   int old_pri = cur->priority;
 
   cur->priority = cur->original_priority;
-
-
-
-  // set cur->priority to MAX(every_max_lock_priority, original_priority)
-  struct list_elem *e;
-  for(e = list_begin(&cur->locks);e!=list_end(&cur->locks);e = list_next(e)){
-    struct lock *l = list_entry (e, struct lock, elem);
-    if (cur->priority < l->MAX_LOCK_Piority){
-      cur->priority = l->MAX_LOCK_Piority;
-    }
-  }
+  thread_update_priority(cur);
 
   intr_set_level (old_level);
   thread_yield();

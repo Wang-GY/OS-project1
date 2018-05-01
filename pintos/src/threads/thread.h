@@ -156,5 +156,5 @@ bool thread_more_important(struct thread *thread1, struct thread *thread2);
 // change lock's MAX_LOCK_Piority if thread->current > lock->MAX_LOCK_Piority
 void notify_lock(struct thread *thread);
 
-
+void thread_update_priority(struct thread *cur);
 #endif /* threads/thread.h */

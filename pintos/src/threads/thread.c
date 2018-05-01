@@ -124,13 +124,13 @@ void
 thread_tick (void)
 {
   struct thread *t = thread_current ();
-  /*
+  
   // don't change the following 3 lines  *********   !!!
       int len = strlen (t-> name);
       if (t->name[len - 1] >= '0' && t->name[len - 1] <= '9')
           printf ("(%c%c,%d) ", t->name[len - 2], t->name[len - 1], t->priority);
   //things to help us testing your program  ***   !!!
-  */
+
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -414,11 +414,32 @@ thread_set_priority (int new_priority)
     cur->priority = cur->original_priority;
     notify_lock(cur);
     thread_yield();
+  }else{
+    // try to lower the priority
+    thread_update_priority(cur);
+    thread_yield();
   }
   // new priority is less than donated priority, just record.
 }
   intr_set_level (old_level);
 }
+
+// set the priority to be max(locks priority and original_priority)
+void thread_update_priority(struct thread *cur){
+
+  cur->priority = cur->original_priority;
+
+  // set cur->priority to MAX(every_max_lock_priority, original_priority)
+  struct list_elem *e;
+  for(e = list_begin(&cur->locks);e!=list_end(&cur->locks);e = list_next(e)){
+    struct lock *l = list_entry (e, struct lock, elem);
+    if (cur->priority < l->MAX_LOCK_Piority){
+      cur->priority = l->MAX_LOCK_Piority;
+    }
+  }
+}
+
+
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void)
