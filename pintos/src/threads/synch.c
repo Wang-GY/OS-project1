@@ -69,6 +69,7 @@ sema_down (struct semaphore *sema)
   while (sema->value == 0)
     {
       //list_push_back (&sema->waiters, &thread_current ()->elem);
+      // thread_current can not in ready list.
       list_insert_ordered(&sema->waiters, &thread_current ()->elem,(list_less_func *) &thread_elem_less,NULL);
       thread_block ();
     }
@@ -204,14 +205,14 @@ lock_acquire (struct lock *lock)
   struct thread *cur = thread_current ();
   cur->lock = lock;
 
-  enum intr_level old_level;
-  old_level = intr_disable ();
+  enum intr_level old_level = intr_disable ();
   // dangerous operation can not be interrupt.
   notify_holder(lock);
   intr_set_level (old_level);
 
   sema_down (&lock->semaphore);
   lock->holder = cur;
+
   list_push_back(&cur->locks,&lock->elem);
 }
 
@@ -404,6 +405,7 @@ void notify_holder(struct lock *lock){
   }
 
   if (lock->holder == NULL){
+    lock->MAX_LOCK_Piority = cur->priority;
     return;
   }
   else{
