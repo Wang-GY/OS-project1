@@ -207,7 +207,7 @@ lock_acquire (struct lock *lock)
 
   enum intr_level old_level = intr_disable ();
   // dangerous operation can not be interrupt.
-  notify_holder(lock);
+  notify_lock(cur);
   intr_set_level (old_level);
 
   sema_down (&lock->semaphore);
@@ -235,7 +235,7 @@ lock_try_acquire (struct lock *lock)
   enum intr_level old_level;
   old_level = intr_disable ();
   // dangerous operation can not be interrupt.
-  notify_holder(lock);
+  notify_lock(cur);
   intr_set_level (old_level);
   success = sema_try_down (&lock->semaphore);
   if (success){
@@ -396,11 +396,8 @@ notify lock's holder if someone denoate it's priority to this thread
 */
 void notify_holder(struct lock *lock){
   ASSERT (intr_get_level () == INTR_OFF);
-  // do nothing if this lock doesn't have holder.
+
   struct thread *cur = thread_current();
-  if (lock->MAX_LOCK_Piority < cur->priority){
-    lock->MAX_LOCK_Piority = cur->priority;
-  }
 
   if (lock->holder == NULL){
     lock->MAX_LOCK_Piority = cur->priority;
@@ -411,6 +408,8 @@ void notify_holder(struct lock *lock){
     if (holder->priority < lock->MAX_LOCK_Piority){
       ASSERT(!list_empty(&holder->locks));
       holder->priority = lock->MAX_LOCK_Piority;
+      // adjust ready list
+      thread_reinsert_ready_list(holder);
       notify_lock(holder);
     }
     // notify lock that the thread is waiting for.

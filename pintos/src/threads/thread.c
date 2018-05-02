@@ -124,13 +124,13 @@ void
 thread_tick (void)
 {
   struct thread *t = thread_current ();
-  
+  /*
   // don't change the following 3 lines  *********   !!!
       int len = strlen (t-> name);
       if (t->name[len - 1] >= '0' && t->name[len - 1] <= '9')
           printf ("(%c%c,%d) ", t->name[len - 2], t->name[len - 1], t->priority);
   //things to help us testing your program  ***   !!!
-
+  */
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -147,14 +147,11 @@ thread_tick (void)
   /* Enforce preemption. */
   if (++thread_ticks >= t->time_slce){
     //check interrupt. for example:never interrupt main
-
     intr_yield_on_return ();
-
-
     // switch thread if there are some therad waite
   }
 }
-/**/
+
 void update_alarm(struct thread *t){
       // if alarm_ticks not 0
       if(t->alarm_ticks>0 && t->status == THREAD_BLOCKED){
@@ -367,6 +364,17 @@ thread_yield (void)
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
+}
+
+/*reinsert thread to ready list
+used after priority change
+*/
+
+thread_reinsert_ready_list(struct thread *t){
+  if (t->status == THREAD_READY){
+    list_remove(&t->elem);
+    list_insert_ordered(&ready_list,&t->elem,(list_less_func *) &thread_elem_less,NULL);
+  }
 }
 
 /* Invoke function 'func' on all threads, passing along 'aux'.
