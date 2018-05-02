@@ -124,14 +124,13 @@ void
 thread_tick (void)
 {
   struct thread *t = thread_current ();
-  /*
+  
   // don't change the following 3 lines  *********   !!!
       int len = strlen (t-> name);
       if (t->name[len - 1] >= '0' && t->name[len - 1] <= '9')
           printf ("(%c%c,%d) ", t->name[len - 2], t->name[len - 1], t->priority);
   //things to help us testing your program  ***   !!!
-  */
-  enum intr_level old_level = intr_get_level ();
+
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -146,13 +145,13 @@ thread_tick (void)
   thread_foreach(update_alarm,NULL);
 
   /* Enforce preemption. */
-  if (++thread_ticks >= TIME_SLICE){
+  if (++thread_ticks >= t->time_slce){
     //check interrupt. for example:never interrupt main
     intr_yield_on_return ();
     // switch thread if there are some therad waite
   }
 }
-/**/
+
 void update_alarm(struct thread *t){
       // if alarm_ticks not 0
       if(t->alarm_ticks>0 && t->status == THREAD_BLOCKED){
@@ -367,6 +366,17 @@ thread_yield (void)
   intr_set_level (old_level);
 }
 
+/*reinsert thread to ready list
+used after priority change
+*/
+
+thread_reinsert_ready_list(struct thread *t){
+  if (t->status == THREAD_READY){
+    list_remove(&t->elem);
+    list_insert_ordered(&ready_list,&t->elem,(list_less_func *) &thread_elem_less,NULL);
+  }
+}
+
 /* Invoke function 'func' on all threads, passing along 'aux'.
    This function must be called with interrupts off. */
 void
@@ -406,17 +416,38 @@ thread_set_priority (int new_priority)
     cur->priority = new_priority;
     thread_yield();
   }else{// has lock, just record
-    
+
   // preserve that priority always max:
   if (cur->priority < cur->original_priority){
     cur->priority = cur->original_priority;
     notify_lock(cur);
+    thread_yield();
+  }else{
+    // try to lower the priority
+    thread_update_priority(cur);
     thread_yield();
   }
   // new priority is less than donated priority, just record.
 }
   intr_set_level (old_level);
 }
+
+// set the priority to be max(locks priority and original_priority)
+void thread_update_priority(struct thread *cur){
+
+  cur->priority = cur->original_priority;
+
+  // set cur->priority to MAX(every_max_lock_priority, original_priority)
+  struct list_elem *e;
+  for(e = list_begin(&cur->locks);e!=list_end(&cur->locks);e = list_next(e)){
+    struct lock *l = list_entry (e, struct lock, elem);
+    if (cur->priority < l->MAX_LOCK_Piority){
+      cur->priority = l->MAX_LOCK_Piority;
+    }
+  }
+}
+
+
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void)
@@ -542,6 +573,10 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->original_priority = priority;
+
+  t->birth_priority = priority;
+  t->time_slce = priority%7 + 2;
+
   list_init(&t->locks);
   t->lock=NULL;
   t->magic = THREAD_MAGIC;
@@ -676,7 +711,7 @@ void notify_lock(struct thread *thread){
     if (lock == NULL){
       // get the original thread that cause the lock, the priority should
       //have been donated,just schedule it.
-      // thread_yield();
+      thread_yield();
       return;
     }
 

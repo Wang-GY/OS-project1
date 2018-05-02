@@ -69,6 +69,7 @@ sema_down (struct semaphore *sema)
   while (sema->value == 0)
     {
       //list_push_back (&sema->waiters, &thread_current ()->elem);
+      // thread_current can not in ready list.
       list_insert_ordered(&sema->waiters, &thread_current ()->elem,(list_less_func *) &thread_elem_less,NULL);
       thread_block ();
     }
@@ -204,14 +205,14 @@ lock_acquire (struct lock *lock)
   struct thread *cur = thread_current ();
   cur->lock = lock;
 
-  enum intr_level old_level;
-  old_level = intr_disable ();
+  enum intr_level old_level = intr_disable ();
   // dangerous operation can not be interrupt.
-  notify_holder(lock);
+  notify_lock(cur);
   intr_set_level (old_level);
 
   sema_down (&lock->semaphore);
   lock->holder = cur;
+
   list_push_back(&cur->locks,&lock->elem);
 }
 
@@ -234,7 +235,7 @@ lock_try_acquire (struct lock *lock)
   enum intr_level old_level;
   old_level = intr_disable ();
   // dangerous operation can not be interrupt.
-  notify_holder(lock);
+  notify_lock(cur);
   intr_set_level (old_level);
   success = sema_try_down (&lock->semaphore);
   if (success){
@@ -267,20 +268,8 @@ lock_release (struct lock *lock)
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 
-  int old_pri = cur->priority;
-
   cur->priority = cur->original_priority;
-
-
-
-  // set cur->priority to MAX(every_max_lock_priority, original_priority)
-  struct list_elem *e;
-  for(e = list_begin(&cur->locks);e!=list_end(&cur->locks);e = list_next(e)){
-    struct lock *l = list_entry (e, struct lock, elem);
-    if (cur->priority < l->MAX_LOCK_Piority){
-      cur->priority = l->MAX_LOCK_Piority;
-    }
-  }
+  thread_update_priority(cur);
 
   intr_set_level (old_level);
   thread_yield();
@@ -407,13 +396,11 @@ notify lock's holder if someone denoate it's priority to this thread
 */
 void notify_holder(struct lock *lock){
   ASSERT (intr_get_level () == INTR_OFF);
-  // do nothing if this lock doesn't have holder.
+
   struct thread *cur = thread_current();
-  if (lock->MAX_LOCK_Piority < cur->priority){
-    lock->MAX_LOCK_Piority = cur->priority;
-  }
 
   if (lock->holder == NULL){
+    lock->MAX_LOCK_Piority = cur->priority;
     return;
   }
   else{
@@ -421,6 +408,8 @@ void notify_holder(struct lock *lock){
     if (holder->priority < lock->MAX_LOCK_Piority){
       ASSERT(!list_empty(&holder->locks));
       holder->priority = lock->MAX_LOCK_Piority;
+      // adjust ready list
+      thread_reinsert_ready_list(holder);
       notify_lock(holder);
     }
     // notify lock that the thread is waiting for.

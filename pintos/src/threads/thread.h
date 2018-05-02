@@ -95,6 +95,10 @@ struct thread
     struct list_elem elem;              /* List element. */
 
     int original_priority;              //priority without donation.
+
+    int birth_priority;                 /*Priority when the thread is created*/
+    int time_slce;                  /*time_slce = birth_priority%7 + 2*/
+
     struct list locks;                  /* Locks that the thread hold */
     struct lock *lock;           /* lock that the thread is waiting for */
 
@@ -152,5 +156,6 @@ bool thread_more_important(struct thread *thread1, struct thread *thread2);
 // change lock's MAX_LOCK_Piority if thread->current > lock->MAX_LOCK_Piority
 void notify_lock(struct thread *thread);
 
-
+thread_reinsert_ready_list(struct thread *t);
+void thread_update_priority(struct thread *cur);
 #endif /* threads/thread.h */
