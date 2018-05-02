@@ -268,8 +268,6 @@ lock_release (struct lock *lock)
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 
-  int old_pri = cur->priority;
-
   cur->priority = cur->original_priority;
   thread_update_priority(cur);
 
