@@ -1,0 +1,4 @@
+
+*.o
+
+pintos/src/threads/retry\.sh
